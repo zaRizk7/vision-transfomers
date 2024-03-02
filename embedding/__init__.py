@@ -13,39 +13,41 @@ __all__ = ["PatchEmbedding", "ClassToken"]
 
 
 class PatchEmbedding(nn.Module):
-    def __init__(self, c: int, p: int, d: int) -> None:
+    def __init__(self, channel_dim: int, patch_size: int, emb_dim: int) -> None:
         super().__init__()
-        self.c = c
-        self.p = p
-        self.d = d
-        self.E = nn.Parameter(empty(d, c * p**2))
+        self.channel_dim = channel_dim
+        self.patch_size = patch_size
+        self.emb_dim = emb_dim
+        self.E = nn.Parameter(empty(emb_dim, channel_dim * patch_size**2))
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.normal_(self.E, std=1 / sqrt(self.c * self.p**2))
+        nn.init.normal_(self.E, std=1 / sqrt(self.channel_dim * self.patch_size**2))
 
     def forward(self, x: FloatTensor) -> FloatTensor:
-        x_hat = channel_first_to_last(x)
-        x_hat, _ = image_to_patch(x_hat, self.p)
-        return linear(x_hat, self.E)
+        x = channel_first_to_last(x)
+        x, _ = image_to_patch(x, self.patch_size)
+        return linear(x, self.E)
 
     def extra_repr(self) -> str:
-        return "c={}, p={}, d={}".format(self.c, self.p, self.d)
+        return "channel_dim={}, patch_size={}, emb_dim={}".format(
+            self.channel_dim, self.patch_size, self.emb_dim
+        )
 
 
 class ClassToken(nn.Module):
-    def __init__(self, d: int) -> None:
+    def __init__(self, emb_dim: int) -> None:
         super().__init__()
-        self.d = d
+        self.emb_dim = emb_dim
 
-        self.x_class = nn.Parameter(empty(d))
+        self.x_class = nn.Parameter(empty(emb_dim))
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.normal_(self.x_class, std=1 / sqrt(self.d))
+        nn.init.normal_(self.x_class, std=1 / sqrt(self.emb_dim))
 
     def forward(self, x: FloatTensor) -> FloatTensor:
         return concat_class_token(x, self.x_class)
 
     def extra_repr(self) -> str:
-        return "d={}".format(self.d)
+        return "emb_dim={}".format(self.emb_dim)

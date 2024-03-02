@@ -4,12 +4,12 @@ __all__ = ["PositionalEncoding"]
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, n: int, d: int) -> None:
+    def __init__(self, num_patch: int, emb_dim: int) -> None:
         super().__init__()
-        self.n = n
-        self.d = d
+        self.num_patch = num_patch
+        self.emb_dim = emb_dim
 
-        self.E_pos = nn.Parameter(empty(n, d))
+        self.E_pos = nn.Parameter(empty(num_patch, emb_dim))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -19,4 +19,4 @@ class PositionalEncoding(nn.Module):
         return x + self.E_pos
 
     def extra_repr(self) -> str:
-        return "n={}, d={}".format(self.n, self.d)
+        return "num_patch={}, emb_dim={}".format(self.num_patch, self.emb_dim)

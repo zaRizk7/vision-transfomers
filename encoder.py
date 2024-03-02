@@ -7,14 +7,14 @@ __all__ = ["TransformerEncoder"]
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, d: int, d_h: int, k: int) -> None:
+    def __init__(self, emb_dim: int, qkv_dim: int, num_head: int) -> None:
         super().__init__()
-        self.ln1 = nn.LayerNorm(d)
-        self.msa = MultiheadSelfAttention(d, d_h, k)
-        self.ln2 = nn.LayerNorm(d)
-        self.mlp = MLP(d, d * 4)
+        self.ln1 = nn.LayerNorm(emb_dim)
+        self.msa = MultiheadSelfAttention(emb_dim, qkv_dim, num_head)
+        self.ln2 = nn.LayerNorm(emb_dim)
+        self.mlp = MLP(emb_dim, emb_dim * 4)
 
     def forward(self, z: FloatTensor) -> FloatTensor:
-        z_hat = self.msa(self.ln1(z)) + z
-        z_hat = self.mlp(self.ln2(z_hat)) + z_hat
-        return z_hat
+        zl = self.msa(self.ln1(z)) + z
+        zl = self.mlp(self.ln2(zl)) + zl
+        return zl
